@@ -7,59 +7,63 @@ void main() {
   runApp(MyApp());
 }
 
-class Truck {
-  final String truckId;
-  Truck({required this.truckId});
+class Vehicle {
+  final String vin;
+
+  Vehicle({required this.vin});
+
+  factory Vehicle.fromJson(Map<String, dynamic> json) {
+    return Vehicle(
+      vin: json['vin'],
+    );
+  }
 }
 
-class TruckController extends GetxController {
-  var truckList = <Truck>[].obs;
-  var selectedTruck = ''.obs;
+class VehicleController extends GetxController {
+  var vehicleList = <Vehicle>[].obs;
+  var selectedVehicle = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
-    fetchTruckList();
+    fetchVehicleList();
   }
 
-  Future<void> fetchTruckList() async {
+  Future<void> fetchVehicleList() async {
     try {
       final response = await http.get(Uri.parse(
-          'https://vusn8u873d.execute-api.ap-south-1.amazonaws.com/production/alex_trucks'));
+          'https://p1q2az2mxk.execute-api.ap-south-1.amazonaws.com/production/xyz_list'));
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        List<dynamic> truckData = jsonData['Trucks List'];
+        List<dynamic> uniqueVins = jsonData['unique_vins'];
 
-        truckList.value = truckData
-            .map((truckId) =>
-            Truck(
-              truckId: truckId,
-            ))
+        vehicleList.value = uniqueVins
+            .map((vin) => Vehicle(vin: vin))
             .toList();
       } else {
-        throw Exception('Failed to load trucks: ${response.statusCode}');
+        throw Exception('Failed to load vehicles: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Failed to load trucks: $e');
+      throw Exception('Failed to load vehicles: $e');
     }
   }
 
-  void selectTruck(String truckId) {
-    selectedTruck.value = truckId;
+  void selectVehicle(String vehicleId) {
+    selectedVehicle.value = vehicleId;
   }
 }
 
 class MyApp extends StatelessWidget {
-  final TruckController truckController = Get.put(TruckController());
+  final VehicleController vehicleController = Get.put(VehicleController());
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Truck List Example',
+      title: 'Vehicle List Example',
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Truck List'),
+          title: Text('Vehicle List'),
         ),
         body: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,12 +71,12 @@ class MyApp extends StatelessWidget {
             Expanded(
               child: Obx(
                     () => ListView.builder(
-                  itemCount: truckController.truckList.length,
+                  itemCount: vehicleController.vehicleList.length,
                   itemBuilder: (context, index) {
-                    final truck = truckController.truckList[index];
+                    final vehicle = vehicleController.vehicleList[index];
                     return ListTile(
-                      title: Text('Truck ID: ${truck.truckId}'),
-                      onTap: () => truckController.selectTruck(truck.truckId),
+                      title: Text('VIN: ${vehicle.vin}'),
+                      onTap: () => vehicleController.selectVehicle(vehicle.vin),
                     );
                   },
                 ),
@@ -81,7 +85,7 @@ class MyApp extends StatelessWidget {
             Expanded(
               child: Obx(
                     () => Text(
-                  'Selected Truck ID: ${truckController.selectedTruck}',
+                  'Selected Vehicle VIN: ${vehicleController.selectedVehicle}',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               ),
